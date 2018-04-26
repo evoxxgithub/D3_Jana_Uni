@@ -59,6 +59,50 @@ var colorScale = function(data_value){
 	}
 }
 
+function SelectionContainer() {
+
+    this.firstSelection = [];
+    this.secondSelection = [];
+
+    this.selectionType = 'none';
+
+    SelectionContainer.prototype.selectNext(dom) = function(dom) {
+        console.log(dom);
+    }
+}
+
+const selectionContainer = {
+    firstSelection: null,
+    secondSelection: null,
+    lastIndexPushedTo: -1,
+    selectionMode: 'row',
+    selectNext: function(dom) {
+        console.log(dom);
+        if (dom.classList.contains(this.selectionMode)) {
+            this.lastIndexPushedTo = (this.lastIndexPushedTo + 1) % 2;
+            console.log(this.lastIndexPushedTo);
+            if (this.lastIndexPushedTo < 1) {
+                this.unselect(this.firstSelection);
+                this.firstSelection = dom;
+            } else {
+                this.unselect(this.secondSelection);
+                this.secondSelection = dom;
+            }
+            console.log(this.firstSelection);
+        }
+    },
+    unselect: function(dom) {
+        if (dom) dom.classList.remove('selected');
+    },
+    changeSelectionModeTo: function(mode) {
+        unselect(this.firstSelection);
+        unselect(this.secondSelection);
+        this.firstSelection = null;
+        this.secondSelection = null;
+        this.selectionMode = mode;
+    }
+}
+
 var xScale = d3.scaleBand()
         .domain(columnLabels)
         .rangeRound([x_space, width - left_x])
@@ -86,18 +130,23 @@ var groups = svg
     .append('g')
     .attr('class', 'rows');
 
-
+var node_matrix = [];
 
 
 for (i = 0; i < d3.selectAll('.rows').size(); i++) {
 
-   var row_rects = d3.selectAll('.rows');
+   var row_rects = d3.selectAll('.rows')
+                .on('click', function() {
+                d3.select(this).attr('class', 'row selected');
+                selectionContainer.selectNext(this);
+                });
 
       var rectGroup = d3.select(row_rects.nodes()[i]).selectAll('rect')
 				.data(data[i])
 		      	.enter()
 		      	.append('g')
 		      	.attr('class', "singleRect")
+                .call(function(row){ node_matrix.push(row); });
 		      rectGroup
 	      		.append('rect')
 	      		.on("mouseover", handleMouseOver)
@@ -112,11 +161,7 @@ for (i = 0; i < d3.selectAll('.rows').size(); i++) {
         		.attr('y', (y_space + i * (cellHeight + cell_distance + 1.5)))
        			.attr('width', cellWidth)
 				.attr('height', cellHeight)
-				.attr('fill', function(d) {
-
-            return colorScale(d);
-
-       } );
+				.attr('fill', function(d) { return colorScale(d); });
 
 				rectGroup
 					.append('text')
@@ -130,6 +175,8 @@ for (i = 0; i < d3.selectAll('.rows').size(); i++) {
 
 
 }
+
+console.log(node_matrix);
 
 
 function handleMouseOver(d, i) {  // Add interactivity

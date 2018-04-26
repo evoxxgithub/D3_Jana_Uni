@@ -6,3 +6,8 @@ body {
 .singleRect {
 	text-align: center;
 }
+
+.selected .singleRect {
+    stroke-width: 2;
+    stroke: #444;
+}
