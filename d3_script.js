@@ -17,6 +17,7 @@ var data = [
     [4.40, 7.88, 6.54, 7.73, 7.19, 6.08, 5.50, 8.56, 2.40, 4.00, 4.88, 4.58, 3.88, 7.75, 3.60],
     [4.12, 8.08, 5.08, 4.56, 8.04, 2.98, 5.23, 3.69, 2.04, 3.85, 4.98, 7.12, 4.31, 7.90, 7.94]
 ];
+var node_matrix = [];
 var rowLabels = ["Class", "Date", "Bus", "Family dinner", "Park", "Church", "Job interview", "Sidewalk", "Movies", "Bar", "Elevator", "Restroom", "Own room", "Dorm lounge", "Football game"];
 var columnLabels = ["Run", "Talk", "Kiss", "Write", "Eat", "Sleep", "Mumble", "Read", "Fight", "Belch", "Argue", "Jump", "Cry", "Laugh", "Shout"];
 
@@ -84,19 +85,31 @@ const selectionContainer = {
             if (this.lastIndexPushedTo < 1) {
                 this.unselect(this.firstSelection);
                 this.firstSelection = dom;
+                console.log(dom.classList);
+                dom.classList.add('selected');
             } else {
                 this.unselect(this.secondSelection);
                 this.secondSelection = dom;
+                dom.classList.add('selected');
             }
             console.log(this.firstSelection);
+            if (this.firstSelection && this.secondSelection) {
+              var diff = 0;
+              for (i = 0; i < 15; i++) {
+                const firstNumber = this.firstSelection.childNodes[i].childNodes[1].innerHTML;
+                const secondNumber = this.secondSelection.childNodes[i].childNodes[1].innerHTML;
+                diff += Math.abs((firstNumber - secondNumber)*10) / 15;
+              }
+              document.getElementById('diffshower').innerHTML = Math.round(diff) + '%';
+            }
         }
     },
     unselect: function(dom) {
         if (dom) dom.classList.remove('selected');
     },
     changeSelectionModeTo: function(mode) {
-        unselect(this.firstSelection);
-        unselect(this.secondSelection);
+        this.unselect(this.firstSelection);
+        this.unselect(this.secondSelection);
         this.firstSelection = null;
         this.secondSelection = null;
         this.selectionMode = mode;
@@ -123,60 +136,132 @@ var yAxis = d3.axisRight()
         .scale(yScale)
         .tickValues(rowLabels);
 
-var groups = svg
-    .selectAll('g.rows')
-    .data(data)
-    .enter()
-    .append('g')
-    .attr('class', 'rows');
+function createSvgWithRows() {
 
-var node_matrix = [];
+  deleteSvgContent();
+
+  var groups = svg
+      .selectAll('g.row')
+      .data(data)
+      .enter()
+      .append('g')
+      .attr('class', 'row');
 
 
-for (i = 0; i < d3.selectAll('.rows').size(); i++) {
+  for (i = 0; i < d3.selectAll('.row').size(); i++) {
 
-   var row_rects = d3.selectAll('.rows')
-                .on('click', function() {
-                d3.select(this).attr('class', 'row selected');
-                selectionContainer.selectNext(this);
-                });
+     var row_rects = d3.selectAll('.row')
+                  .on('click', function() {
+                  selectionContainer.selectNext(this);
+                  });
 
-      var rectGroup = d3.select(row_rects.nodes()[i]).selectAll('rect')
-				.data(data[i])
-		      	.enter()
-		      	.append('g')
-		      	.attr('class', "singleRect")
-                .call(function(row){ node_matrix.push(row); });
-		      rectGroup
-	      		.append('rect')
-	      		.on("mouseover", handleMouseOver)
-	      		.on("mouseout", handleMouseOut)
-	      		.attr('rx', '3')
-	      		.attr('ry', '3')
-	      		.style('border-radius', '2px')
-				.attr('x', function(d, i) {
-           return x_space + i * (cellWidth + cell_distance)
-        })
+        var rectGroup = d3.select(row_rects.nodes()[i]).selectAll('rect')
+  				.data(data[i])
+  		      	.enter()
+  		      	.append('g')
+  		      	.attr('class', "singleRect")
+                  .call(function(row){ node_matrix.push(row); });
+  		      rectGroup
+  	      		.append('rect')
+  	      		.on("mouseover", handleMouseOver)
+  	      		.on("mouseout", handleMouseOut)
+  	      		.attr('rx', '3')
+  	      		.attr('ry', '3')
+  	      		.style('border-radius', '2px')
+  				.attr('x', function(d, i) {
+             return x_space + i * (cellWidth + cell_distance)
+          })
 
-        		.attr('y', (y_space + i * (cellHeight + cell_distance + 1.5)))
-       			.attr('width', cellWidth)
-				.attr('height', cellHeight)
-				.attr('fill', function(d) { return colorScale(d); });
+          		.attr('y', (y_space + i * (cellHeight + cell_distance + 1.5)))
+         			.attr('width', cellWidth)
+  				.attr('height', cellHeight)
+  				.attr('fill', function(d) { return colorScale(d); });
 
-				rectGroup
-					.append('text')
-					.attr('x', function(d, i){ return x_space + i * (cellWidth + cell_distance) + cellWidth/2 })
-					.attr('y', (y_space + (i * (35 /* improve readability */)) + cellHeight/1.55))
-					.on("mouseover", handleMouseOver)
-					.on("mouseout", handleMouseOut)
-					.attr('text-anchor', 'middle')
-					.html(function(d){ return d })
-					.style('display', 'none');
+  				rectGroup
+  					.append('text')
+  					.attr('x', function(d, i){ return x_space + i * (cellWidth + cell_distance) + cellWidth/2 })
+  					.attr('y', (y_space + (i * (35 /* improve readability */)) + cellHeight/1.55))
+  					.on("mouseover", handleMouseOver)
+  					.on("mouseout", handleMouseOut)
+  					.attr('text-anchor', 'middle')
+  					.html(function(d){ return d })
+  					.style('display', 'none');
 
+
+  }
+}
+
+function createSvgWithCols() {
+
+deleteSvgContent();
+
+  var groups = svg
+      .selectAll('g.col')
+      .data(data)
+      .enter()
+      .append('g')
+      .attr('class', 'col');
+
+  for (i = 0; i < d3.selectAll('.col').size(); i++) {
+
+     var row_rects = d3.selectAll('.col')
+                  .on('click', function() {
+                  selectionContainer.selectNext(this);
+                  });
+
+        var rectGroup = d3.select(row_rects.nodes()[i]).selectAll('rect')
+  				.data(data[i])
+  		      	.enter()
+  		      	.append('g')
+  		      	.attr('class', "singleRect")
+                  .call(function(row){ node_matrix.push(row); });
+  		      rectGroup
+  	      		.append('rect')
+  	      		.on("mouseover", handleMouseOver)
+  	      		.on("mouseout", handleMouseOut)
+  	      		.attr('rx', '3')
+  	      		.attr('ry', '3')
+  	      		.style('border-radius', '2px')
+  				.attr('y', function(d, i) {
+             return y_space + i * (cellHeight + cell_distance + 1.5)
+          })
+
+          		.attr('x', (x_space + i * (cellWidth + cell_distance)))
+         			.attr('width', cellWidth)
+  				.attr('height', cellHeight)
+  				.attr('fill', function(d) { return colorScale(d); });
+
+  				rectGroup
+  					.append('text')
+  					.attr('x', x_space + i * (cellWidth + cell_distance) + cellWidth/2)
+  					.attr('y', function(d, i){ return (y_space + (i * (35 /* improve readability */)) + cellHeight/1.55)})
+  					.on("mouseover", handleMouseOver)
+  					.on("mouseout", handleMouseOut)
+  					.attr('text-anchor', 'middle')
+  					.html(function(d){ return d })
+  					.style('display', 'none');
+
+
+  }
+}
+
+function deleteSvgContent() {
+  const svg_element = document.getElementsByTagName('svg')[0];
+  if (svg_element.lastChild) console.log(svg_element.lastChild.tagName);
+  else return;
+  
+  while(svg_element.firstChild && !svg_element.firstChild.classList.contains('axis')) {
+    svg_element.removeChild(svg_element.firstChild);
+  }
+
+  console.log(svg_element);
+  while(svg_element.lastChild.tagName == 'g') {
+    svg_element.removeChild(svg_element.lastChild);
+  }
 
 }
 
-console.log(node_matrix);
+createSvgWithCols();
 
 
 function handleMouseOver(d, i) {  // Add interactivity
@@ -194,6 +279,22 @@ function handleMouseOut(d, i) {  // Add interactivity
 				.style('display', 'none');
             }
 
+function modeToCols() {
+  console.log('test');
+  selectionContainer.changeSelectionModeTo('col');
+  createSvgWithCols();
+  console.log(selectionContainer.selectionMode);
+}
+
+function modeToRows() {
+  console.log('test');
+  selectionContainer.changeSelectionModeTo('row');
+  createSvgWithRows();
+  console.log(selectionContainer.selectionMode);
+}
+
+document.getElementById('selectColsButton').addEventListener("click", modeToCols);
+document.getElementById('selectRowsButton').addEventListener("click", modeToRows);
 var differnence = function(vec1, vec2){
 
 }

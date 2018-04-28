@@ -7,7 +7,14 @@ body {
 	text-align: center;
 }
 
-.selected .singleRect {
+.selected rect {
     stroke-width: 2;
     stroke: #444;
+}
+
+.difflabel {
+  display: inline-block;
+  margin: 0;
+  margin-left: 15px;
+  padding: 2px;
 }
